@@ -44,11 +44,16 @@ public class HazelcastInstanceFactory {
 	/**
 	 * Create a {@link HazelcastInstanceFactory} for the specified configuration location.
 	 * @param configLocation the location of the configuration file
+	 * @param configCustomizer the Hazelcast config customizer
 	 * @throws IOException if the configuration location could not be read
 	 */
-	public HazelcastInstanceFactory(Resource configLocation) throws IOException {
+	public HazelcastInstanceFactory(Resource configLocation, HazelcastConfigCustomizer configCustomizer)
+			throws IOException {
 		Assert.notNull(configLocation, "ConfigLocation must not be null");
-		this.config = getConfig(configLocation);
+		Assert.notNull(configCustomizer, "ConfigCustomizer must not be null");
+		Config config = getConfig(configLocation);
+		configCustomizer.customize(config);
+		this.config = config;
 	}
 
 	/**

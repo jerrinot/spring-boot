@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandi
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
 
 /**
@@ -37,6 +38,7 @@ import org.springframework.core.io.Resource;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(HazelcastInstance.class)
+@Import(HazelcastConfigCustomizerConfiguration.class)
 class HazelcastServerConfiguration {
 
 	static final String CONFIG_SYSTEM_PROPERTY = "hazelcast.config";
@@ -46,11 +48,17 @@ class HazelcastServerConfiguration {
 	@Conditional(ConfigAvailableCondition.class)
 	static class HazelcastServerConfigFileConfiguration {
 
+		private final HazelcastConfigCustomizer configCustomizer;
+
+		HazelcastServerConfigFileConfiguration(HazelcastConfigCustomizer configCustomizer) {
+			this.configCustomizer = configCustomizer;
+		}
+
 		@Bean
 		HazelcastInstance hazelcastInstance(HazelcastProperties properties) throws IOException {
 			Resource config = properties.resolveConfigLocation();
 			if (config != null) {
-				return new HazelcastInstanceFactory(config).getHazelcastInstance();
+				return new HazelcastInstanceFactory(config, this.configCustomizer).getHazelcastInstance();
 			}
 			return Hazelcast.newHazelcastInstance();
 		}
